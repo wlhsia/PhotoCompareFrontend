@@ -1,11 +1,12 @@
 <template>
   <div>
-    <div
+    <!-- <div
       class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm"
     >
       <h1 class="my-0 mr-md-auto font-weight-normal text-center"></h1>
-      <a class="btn btn-outline-primary">登出</a>
-    </div>
+      <a class="btn btn-outline-primary" @click.prevent="logout">登出</a>
+    </div> -->
+    <Navbar />
     <div class="container">
       <div class="jumbotron">
         <h1 class="display-4">施工相片重複比對系統</h1>
@@ -62,33 +63,29 @@
           <th colspan="2"><h3>相片(二)</h3></th>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in filteredResult" :key="index">
+          <tr v-for="(item, index) in result" :key="index">
             <td>
               {{ item.imgName1 }}
             </td>
             <td>
-              <img :src="item.imgUrl1" alt="" />
+              <img
+                :src="require(`../../../backend/resize_imgs/${item.imgName1}`)"
+                alt=""
+              />
             </td>
             <td>
               {{ item.imgName2 }}
             </td>
             <td>
-              <img :src="item.imgUrl2" alt="" />
+              <img
+                :src="require(`../../../backend/resize_imgs/${item.imgName2}`)"
+                alt=""
+              />
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
-    <div class="container">
-      <footer class="pt-4 my-md-5 pt-md-5 border-top text-right">
-        <h5><font-awesome-icon :icon="['fab', 'python']" /> 程式人員</h5>
-        <p>
-          <font-awesome-icon icon="user" /> 夏唯倫<br /><font-awesome-icon
-            icon="phone-square-alt"
-          />
-          400-6529
-        </p>
-      </footer>
+      <Footer />
     </div>
   </div>
 </template>
@@ -96,6 +93,10 @@
 <script>
 import axios from "axios";
 import $ from "jquery";
+
+import Navbar from "@/components/Navbar.vue";
+import Footer from "@/components/Footer.vue";
+import { getCookie, delCookie } from "../assets/js/cookie";
 
 export default {
   name: "",
@@ -107,8 +108,12 @@ export default {
     };
   },
   methods: {
+    logout() {
+      delCookie("username");
+      this.$router.push("/login");
+    },
     upload() {
-      this.result=[];
+      this.result = [];
       var data = new FormData();
       for (var i = 0; i < document.getElementById("file").files.length; i++) {
         data.append(`file${i}`, document.getElementById("file").files[i]);
@@ -118,7 +123,6 @@ export default {
         this.folderPath = response.data.folderPath;
         this.uploadList();
       });
-      // $("#file").outerHTML = file.outerHTML;
     },
     deleteFile(file) {
       let data = {
@@ -166,22 +170,31 @@ export default {
         return true;
       }
     },
-    filteredResult() {
-      var newResult = [];
-      this.result.forEach((item) => {
-        item[
-          "imgUrl1"
-        ] = require(`../../../backend/resize_imgs/${item.imgName1}`);
-        item[
-          "imgUrl2"
-        ] = require(`../../../backend/resize_imgs/${item.imgName2}`);
-        newResult.push(item);
-      });
-      return newResult;
-    },
+    // filteredResult() {
+    //   var newResult = [];
+    //   this.result.forEach((item) => {
+    //     item[
+    //       "imgUrl1"
+    //     ] = require(`../../../backend/resize_imgs/${item.imgName1}`);
+    //     item[
+    //       "imgUrl2"
+    //     ] = require(`../../../backend/resize_imgs/${item.imgName2}`);
+    //     newResult.push(item);
+    //   });
+    //   return newResult;
+    // },
   },
-  created() {
-    // this.uploadList()
+  mounted() {
+    let uname = getCookie("username");
+    this.name = uname;
+    console.log(uname);
+    if (uname == "") {
+      this.$router.push("/login");
+    }
+  },
+  components: {
+    Navbar,
+    Footer,
   },
 };
 </script>

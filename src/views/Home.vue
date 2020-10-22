@@ -3,8 +3,6 @@
     <Navbar />
     <div class="container">
       <div class="jumbotron">
-        <h1 class="display-4">施工相片重複比對系統</h1>
-        <hr class="my-4" />
         <p class="lead text-danger">
           上傳檔案注意事項：
           <br />(1)檔名須為「工程編號(8碼英文數字)_公司代號(1碼數字)_檔案名稱(無限制)+附檔名(.docx或.pdf)」
@@ -16,7 +14,7 @@
       <br />
       <br />
       <button :disabled="!isDisabled" class="btn btn-primary" @click="upload">
-        <h3>上傳施工相片檔案(docx,pdf)</h3>
+        <h3>上傳施工相片檔案</h3>
       </button>
       <br />
       <br />
@@ -49,15 +47,49 @@
       </button>
       <br />
       <br />
-    </div>
-    <div class="container">
+      <div>
+      <h3 class="text-danger">{{ message[0] }}</h3>
+      <h3 class="text-danger">{{ message[1] }}</h3>
+      <button class="btn btn-danger" @click="updateDB"><h3>是</h3></button>
+      </div>
+      <br />
+      <a href="" @click.prevent="download"><h3>下載比對結果</h3></a>
+      <br />
       <table class="table table-striped table-hover" v-show="isTableShow">
         <thead class="thead-dark text-center">
           <th colspan="2"><h3>相片(一)</h3></th>
           <th colspan="2"><h3>相片(二)</h3></th>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in result" :key="index">
+          <tr class="text-center" v-show="result1.length !== 0">
+            <td colspan="2"><h3>上傳的相片</h3></td>
+            <td colspan="2"><h3>上傳的相片</h3></td>
+          </tr>
+          <tr v-for="(item, index) in result1" :key="index">
+            <td>
+              {{ item.imgName1 }}
+            </td>
+            <td>
+              <img
+                :src="require(`../../../backend/resize_imgs/${item.imgName1}`)"
+                alt=""
+              />
+            </td>
+            <td>
+              {{ item.imgName2 }}
+            </td>
+            <td>
+              <img
+                :src="require(`../../../backend/resize_imgs/${item.imgName2}`)"
+                alt=""
+              />
+            </td>
+          </tr>
+          <tr class="text-center" v-if="result2.length !== 0">
+            <td colspan="2"><h3>上傳的相片</h3></td>
+            <td colspan="2"><h3>資料庫的相片</h3></td>
+          </tr>
+          <tr v-for="(item, index) in result2" :key="index">
             <td>
               {{ item.imgName1 }}
             </td>
@@ -87,6 +119,7 @@
 <script>
 import axios from "axios";
 import $ from "jquery";
+import fileDownload from "js-file-download";
 
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
@@ -98,7 +131,10 @@ export default {
     return {
       fileList: [],
       folderPath: "",
-      result: [],
+      result1: [],
+      result2: [],
+      message: [],
+      nonDuplicateImgs: [],
     };
   },
   methods: {
@@ -107,7 +143,9 @@ export default {
       this.$router.push("/login");
     },
     upload() {
-      this.result = [];
+      this.result1 = [];
+      this.result2 = [];
+      this.message = [];
       var data = new FormData();
       for (var i = 0; i < document.getElementById("file").files.length; i++) {
         data.append(`file${i}`, document.getElementById("file").files[i]);
@@ -143,9 +181,29 @@ export default {
       };
       axios.post("/api/api/compare", data).then((response) => {
         // console.log(response);
-        this.result = response.data.result;
+        this.result1 = response.data.result1;
+        this.result2 = response.data.result2;
+        this.message = response.data.message;
+        this.nonDuplicateImgs = response.data.nonDuplicateImgs;
         this.uploadList();
       });
+    },
+    download() {
+      axios({
+        url: "api/download",
+        method: "GET",
+        responseType: "blob",
+      }).then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "比對結果.xlsx");
+        document.body.appendChild(link);
+        link.click();
+      });
+    },
+    updateDB(){
+      
     },
   },
   computed: {
@@ -157,26 +215,12 @@ export default {
       }
     },
     isTableShow() {
-      if (this.result.length === 0) {
-        // console.log(this.result.length);
+      if (this.result1.length === 0) {
         return false;
       } else {
         return true;
       }
     },
-    // filteredResult() {
-    //   var newResult = [];
-    //   this.result.forEach((item) => {
-    //     item[
-    //       "imgUrl1"
-    //     ] = require(`../../../backend/resize_imgs/${item.imgName1}`);
-    //     item[
-    //       "imgUrl2"
-    //     ] = require(`../../../backend/resize_imgs/${item.imgName2}`);
-    //     newResult.push(item);
-    //   });
-    //   return newResult;
-    // },
   },
   mounted() {
     let uname = getCookie("username");

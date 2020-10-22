@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/vue-loading.min.css';
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faPhoneSquareAlt } from '@fortawesome/free-solid-svg-icons'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
@@ -13,7 +15,7 @@ import store from './store'
 
 library.add(faPhoneSquareAlt, faUser, faPython)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
-
+Vue.component('Loading', Loading);
 Vue.config.productionTip = false
 
 

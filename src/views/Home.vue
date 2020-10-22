@@ -1,5 +1,6 @@
 <template>
   <div>
+    <loading :active.sync="isLoading"></loading>
     <Navbar />
     <div class="container">
       <div class="jumbotron">
@@ -48,9 +49,9 @@
       <br />
       <br />
       <div>
-      <h3 class="text-danger">{{ message[0] }}</h3>
-      <h3 class="text-danger">{{ message[1] }}</h3>
-      <button class="btn btn-danger" @click="updateDB"><h3>是</h3></button>
+        <h3 class="text-danger">{{ message[0] }}</h3>
+        <h3 class="text-danger">{{ message[1] }}</h3>
+        <button class="btn btn-danger" @click="updateDB"><h3>是</h3></button>
       </div>
       <br />
       <a href="" @click.prevent="download"><h3>下載比對結果</h3></a>
@@ -119,7 +120,6 @@
 <script>
 import axios from "axios";
 import $ from "jquery";
-import fileDownload from "js-file-download";
 
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
@@ -129,6 +129,7 @@ export default {
   name: "",
   data() {
     return {
+      isLoading: false,
       fileList: [],
       folderPath: "",
       result1: [],
@@ -143,6 +144,7 @@ export default {
       this.$router.push("/login");
     },
     upload() {
+      this.isLoading = true;
       this.result1 = [];
       this.result2 = [];
       this.message = [];
@@ -154,9 +156,11 @@ export default {
         // console.log(response.data);
         this.folderPath = response.data.folderPath;
         this.uploadList();
+        this.isLoading = false;
       });
     },
     deleteFile(file) {
+      this.isLoading = true;
       let data = {
         file: file,
         folderPath: this.folderPath,
@@ -164,6 +168,7 @@ export default {
       axios.post("/api/api/delete", data).then((response) => {
         // console.log(response);
         this.uploadList();
+        this.isLoading = false;
       });
     },
     uploadList() {
@@ -176,6 +181,7 @@ export default {
       });
     },
     compare() {
+      this.isLoading = true;
       let data = {
         folderPath: this.folderPath,
       };
@@ -186,9 +192,11 @@ export default {
         this.message = response.data.message;
         this.nonDuplicateImgs = response.data.nonDuplicateImgs;
         this.uploadList();
+        this.isLoading = false;
       });
     },
     download() {
+      this.isLoading = true;
       axios({
         url: "api/download",
         method: "GET",
@@ -200,10 +208,11 @@ export default {
         link.setAttribute("download", "比對結果.xlsx");
         document.body.appendChild(link);
         link.click();
+        this.isLoading = false;
       });
     },
-    updateDB(){
-      
+    updateDB() {
+      this.isLoading = true;
     },
   },
   computed: {

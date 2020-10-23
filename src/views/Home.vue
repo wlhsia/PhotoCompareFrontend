@@ -51,7 +51,7 @@
       <div>
         <h3 class="text-danger">{{ message[0] }}</h3>
         <h3 class="text-danger">{{ message[1] }}</h3>
-        <button class="btn btn-danger" @click="updateDB"><h3>是</h3></button>
+        <button class="btn btn-danger" @click="openDBModal" v-if="nonDuplicateImgs.length !==0 "><h3>是</h3></button>
       </div>
       <br />
       <a href="" @click.prevent="download"><h3>下載比對結果</h3></a>
@@ -114,6 +114,37 @@
       </table>
       <Footer />
     </div>
+    <!-- modal -->
+    <div class="modal" tabindex="-1" id="dbModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Modal title</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>確認要將相片存入資料庫</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              取消
+            </button>
+            <button type="button" class="btn btn-primary" @click="updateDB">確定</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -139,6 +170,9 @@ export default {
     };
   },
   methods: {
+    openDBModal(){
+      $("#dbModal").modal("show");
+    },
     logout() {
       delCookie("username");
       this.$router.push("/login");
@@ -191,6 +225,7 @@ export default {
         this.result2 = response.data.result2;
         this.message = response.data.message;
         this.nonDuplicateImgs = response.data.nonDuplicateImgs;
+        this.resultFileName = response.data.resultFileName;
         this.uploadList();
         this.isLoading = false;
       });
@@ -199,7 +234,10 @@ export default {
       this.isLoading = true;
       axios({
         url: "api/download",
-        method: "GET",
+        method: "POST",
+        data: {
+          resultFileName: this.resultFileName,
+        },
         responseType: "blob",
       }).then((response) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -212,7 +250,14 @@ export default {
       });
     },
     updateDB() {
+      $("#dbModal").modal("hide");
       this.isLoading = true;
+      let data={
+        imgs: this.nonDuplicateImgs
+      }
+      axios.post("/api/updatedb", data).then((response) => {
+        this.isLoading = false;
+      });
     },
   },
   computed: {
@@ -224,10 +269,10 @@ export default {
       }
     },
     isTableShow() {
-      if (this.result1.length === 0) {
-        return false;
-      } else {
+      if (this.result1.length !== 0 || this.result2.length !== 0) {
         return true;
+      } else {
+        return false;
       }
     },
   },

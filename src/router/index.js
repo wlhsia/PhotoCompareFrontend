@@ -2,7 +2,8 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
-import Admin from '../views/Admin.vue'
+import User from '../views/User.vue'
+import Image from '../views/Image.vue'
 
 Vue.use(VueRouter)
 
@@ -18,9 +19,14 @@ const routes = [
     component: Login
   },
   {
-    path: '/admin',
-    name: 'Admin',
-    component: Admin
+    path: '/user',
+    name: 'user',
+    component: User
+  },
+  {
+    path: '/image',
+    name: 'image',
+    component: Image
   },
 ]
 

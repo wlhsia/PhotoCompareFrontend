@@ -51,10 +51,18 @@
       <div>
         <h3 class="text-danger">{{ message[0] }}</h3>
         <h3 class="text-danger">{{ message[1] }}</h3>
-        <button class="btn btn-danger" @click="openDBModal" v-if="nonDuplicateImgs.length !==0 "><h3>是</h3></button>
+        <button
+          class="btn btn-danger"
+          @click="openDBModal"
+          v-if="nonDuplicateImgs.length !== 0"
+        >
+          <h3>是</h3>
+        </button>
       </div>
       <br />
-      <a href="" @click.prevent="download"><h3>下載比對結果</h3></a>
+      <a href="" @click.prevent="download" v-if="isDownloadShow"
+        ><h3>下載比對結果</h3></a
+      >
       <br />
       <table class="table table-striped table-hover" v-show="isTableShow">
         <thead class="thead-dark text-center">
@@ -114,6 +122,7 @@
       </table>
       <Footer />
     </div>
+
     <!-- modal -->
     <div class="modal" tabindex="-1" id="dbModal">
       <div class="modal-dialog">
@@ -140,7 +149,9 @@
             >
               取消
             </button>
-            <button type="button" class="btn btn-primary" @click="updateDB">確定</button>
+            <button type="button" class="btn btn-primary" @click="updateDB">
+              確定
+            </button>
           </div>
         </div>
       </div>
@@ -161,6 +172,7 @@ export default {
   data() {
     return {
       isLoading: false,
+      isDownloadShow: false,
       fileList: [],
       folderPath: "",
       result1: [],
@@ -170,7 +182,7 @@ export default {
     };
   },
   methods: {
-    openDBModal(){
+    openDBModal() {
       $("#dbModal").modal("show");
     },
     logout() {
@@ -182,6 +194,7 @@ export default {
       this.result1 = [];
       this.result2 = [];
       this.message = [];
+      this.isDownloadShow = false;
       var data = new FormData();
       for (var i = 0; i < document.getElementById("file").files.length; i++) {
         data.append(`file${i}`, document.getElementById("file").files[i]);
@@ -217,6 +230,7 @@ export default {
     compare() {
       this.isLoading = true;
       let data = {
+        username: this.name ,
         folderPath: this.folderPath,
       };
       axios.post("/api/api/compare", data).then((response) => {
@@ -226,6 +240,9 @@ export default {
         this.message = response.data.message;
         this.nonDuplicateImgs = response.data.nonDuplicateImgs;
         this.resultFileName = response.data.resultFileName;
+        if (this.nonDuplicateImgs.length == 0) {
+          this.isDownloadShow = true;
+        }
         this.uploadList();
         this.isLoading = false;
       });
@@ -252,10 +269,12 @@ export default {
     updateDB() {
       $("#dbModal").modal("hide");
       this.isLoading = true;
-      let data={
-        imgs: this.nonDuplicateImgs
-      }
+      let data = {
+        imgs: this.nonDuplicateImgs,
+        username: this.name ,
+      };
       axios.post("/api/updatedb", data).then((response) => {
+        this.isDownloadShow = true;
         this.isLoading = false;
       });
     },

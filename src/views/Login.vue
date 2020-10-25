@@ -2,9 +2,16 @@
   <div>
     <!-- <Navbar /> -->
     <div class="container">
-      <h1 class="display-4">施工相片重複比對系統</h1>
+      <h1 class="display-4 text-center mt-5">施工相片重複比對系統</h1>
+      <div class="row">
+        <div class="col"></div>
+        <div class="col"><img src="../assets/台化logo.png" height="250" width="400" /></div>
+        <div class="col"></div>
+      </div>
+
       <form class="form-signin" @submit.prevent="login">
         <h1 class="h3 mb-3 font-weight-normal">請先登入</h1>
+        <p v-show="showTishi" class="text-center text-danger">{{ tishi }}</p>
         <label for="inputID" class="sr-only">Notes ID</label>
         <input
           type="text"
@@ -28,7 +35,7 @@
           登入
         </button>
       </form>
-      <p v-show="showTishi">{{ tishi }}</p>
+      
       <Footer />
     </div>
   </div>
@@ -72,7 +79,7 @@ export default {
             this.showTishi = true;
           } else if (res.data == "admin") {
             setCookie("username", this.username, 1000 * 60);
-            this.$router.push("/admin");
+            this.$router.push("/user");
           } else {
             this.tishi = "登入成功";
             this.showTishi = true;
@@ -81,7 +88,7 @@ export default {
               function () {
                 this.$router.push("/");
               }.bind(this),
-              1000
+              1
             );
           }
         });

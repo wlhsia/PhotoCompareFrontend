@@ -1,55 +1,60 @@
 <template>
   <div>
     <Navbar />
-    <div class="container">
-      <h1>管理使用者</h1>
-      <br />
-      <button
-        type="button"
-        class="btn btn-success"
-        @click="openUpdateModal(true)"
-      >
-        新增使用者
-      </button>
-      <br />
-      <br />
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th scope="col"></th>
-            <th scope="col">NoteID</th>
-            <th scope="col">密碼</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(item, index) in userList"
-            :key="index"
-            v-show="item.username != 'admin'"
+    <div class="container-fluid">
+      <div class="row">
+        <Sidebar />
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+          <h3>管理使用者</h3>
+          <br />
+          <button
+            type="button"
+            class="btn btn-success"
+            @click="openUpdateModal(true)"
           >
-            <td>{{ index }}</td>
-            <td>{{ item.username }}</td>
-            <td>{{ item.password }}</td>
-            <td>
-              <button
-                type="button"
-                class="btn btn-warning btn-sm"
-                @click="openUpdateModal(false, item)"
+            新增使用者
+          </button>
+          <br />
+          <br />
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col"></th>
+                <th scope="col">NoteID</th>
+                <th scope="col">密碼</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(item, index) in userList"
+                :key="index"
+                v-show="item.username != 'admin'"
               >
-                修改
-              </button>
-              <button
-                type="button"
-                class="btn btn-danger btn-sm"
-                @click="deleteUser(item.username)"
-              >
-                刪除
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <td>{{ index }}</td>
+                <td>{{ item.username }}</td>
+                <td>{{ item.password }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-warning btn-sm"
+                    @click="openUpdateModal(false, item)"
+                  >
+                    修改
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    @click="deleteUser(item.username)"
+                  >
+                    刪除
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </main>
+      </div>
     </div>
     <!-- updateModal -->
     <div
@@ -124,6 +129,7 @@ import axios from "axios";
 import $ from "jquery";
 
 import Navbar from "@/components/Navbar.vue";
+import Sidebar from "@/components/Sidebar.vue";
 import Footer from "@/components/Footer.vue";
 import { getCookie, delCookie } from "../assets/js/cookie";
 
@@ -186,6 +192,7 @@ export default {
   },
   components: {
     Navbar,
+    Sidebar,
     Footer,
   },
 };

@@ -23,7 +23,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">
+          <a class="nav-link" href="#" @click="toUploadRecord">
             <span data-feather="file-text"></span>
             檔案上傳紀錄
           </a>
@@ -50,10 +50,12 @@ export default {
     toUser() {
       this.$router.push("/user");
     },
-    toImageData(){
-    this.$router.push("/image");
+    toImageData() {
+      this.$router.push("/image");
     },
-
+    toUploadRecord() {
+      this.$router.push("/uploadrecord");
+    },
   },
 };
 </script>

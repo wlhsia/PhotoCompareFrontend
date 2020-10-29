@@ -2,7 +2,7 @@
   <div>
     <!-- <Navbar /> -->
     <div class="container">
-      <h1 class="display-4 text-center mt-5">施工相片重複比對系統</h1>
+      <h1 class="display-4 text-center mt-5">台化施工相片重複比對系統</h1>
       <div class="row">
         <div class="col"></div>
         <div class="col"><img src="../assets/台化logo.png" height="250" width="400" /></div>

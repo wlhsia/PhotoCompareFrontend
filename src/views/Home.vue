@@ -54,7 +54,7 @@
         <button
           class="btn btn-danger"
           @click="openDBModal"
-          v-if="nonDuplicateImgs.length !== 0"
+          v-if="nonDuplicateImgsData.length !== 0"
         >
           <h3>是</h3>
         </button>
@@ -179,6 +179,7 @@ export default {
       result2: [],
       message: [],
       nonDuplicateImgs: [],
+      nonDuplicateImgsData: [],
     };
   },
   methods: {
@@ -238,9 +239,9 @@ export default {
         this.result1 = response.data.result1;
         this.result2 = response.data.result2;
         this.message = response.data.message;
-        this.nonDuplicateImgs = response.data.nonDuplicateImgs;
+        this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
         this.resultFileName = response.data.resultFileName;
-        if (this.nonDuplicateImgs.length == 0) {
+        if (this.nonDuplicateImgsData.length == 0) {
           this.isDownloadShow = true;
         }
         this.uploadList();
@@ -270,7 +271,7 @@ export default {
       $("#dbModal").modal("hide");
       this.isLoading = true;
       let data = {
-        imgs: this.nonDuplicateImgs,
+        imgsData: this.nonDuplicateImgsData,
         username: this.name ,
       };
       axios.post("/api/updatedb", data).then((response) => {

@@ -20,8 +20,9 @@
             <thead>
               <tr>
                 <th scope="col"></th>
-                <th scope="col">NoteID</th>
+                <th scope="col">NotesID</th>
                 <th scope="col">密碼</th>
+                <th scope="col">備註</th>
                 <th></th>
               </tr>
             </thead>
@@ -34,6 +35,7 @@
                 <td>{{ index }}</td>
                 <td>{{ item.username }}</td>
                 <td>{{ item.password }}</td>
+                <td>{{ item.remark }}</td>
                 <td>
                   <button
                     type="button"
@@ -101,7 +103,18 @@
                   name="pwd"
                   id="pwd"
                   v-model="tempUser.password"
-                  placeholder="請輸入NoteID"
+                  placeholder="請輸入密碼"
+                />
+              </div>
+              <div class="form-group">
+                <label for="remark" class="col-form-label">備註</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="remark"
+                  id="remark"
+                  v-model="tempUser.remark"
+                  placeholder="請輸入備註"
                 />
               </div>
             </form>
@@ -131,7 +144,7 @@ import $ from "jquery";
 import Navbar from "@/components/Navbar.vue";
 import Sidebar from "@/components/Sidebar.vue";
 import Footer from "@/components/Footer.vue";
-import { getCookie, delCookie } from "../assets/js/cookie";
+import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
 
 export default {
   data() {

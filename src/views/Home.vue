@@ -6,11 +6,15 @@
       <div class="jumbotron">
         <p class="lead text-danger">
           上傳檔案注意事項：
-          <br />(1)檔名須為「工程編號(8碼英文數字)_公司代號(1碼數字)_檔案名稱(無限制)+附檔名(.docx或.pdf)」
-          <br />&emsp;&emsp;例如：「ABCD1234_4_001~006.docx」或「ABCD1234_4_001~006.pdf」
-          <br />(2)上傳PDF檔案相片須為正面朝上或正面朝右
+          <br />(1)檔案類型須為.docx, .xlsx, .pdf
+          <br />(2)檔名勿使用中文及'~'符號
+          <br />(3)檔名須為「工程編號(8碼英文數字)_公司代號(4,
+          RV)_檔案名稱(無限制)+附檔名(.docx, .xlsx, .pdf)」
+          <br />&emsp;&emsp;例如：「ABCD1234_4_001-006.docx」或「ABCD1234_RV_001-006.pdf」
+          <br />(4)上傳PDF檔案相片須為正面朝上或正面朝右
         </p>
       </div>
+      <p class="text-danger">{{ tishi }}</p>
       <input id="file" multiple type="file" :disabled="!isDisabled" />
       <br />
       <br />
@@ -165,7 +169,7 @@ import $ from "jquery";
 
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import { getCookie, delCookie } from "../assets/js/cookie";
+import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
 
 export default {
   name: "",
@@ -180,6 +184,7 @@ export default {
       message: [],
       nonDuplicateImgs: [],
       nonDuplicateImgsData: [],
+      tishi: "",
     };
   },
   methods: {
@@ -192,20 +197,34 @@ export default {
     },
     upload() {
       this.isLoading = true;
+      this.tishi = "";
       this.result1 = [];
       this.result2 = [];
       this.message = [];
+      this.nonDuplicateImgsData = [];
       this.isDownloadShow = false;
-      var data = new FormData();
+      let data = new FormData();
+      const re = /^[A-Z\d]{8}_[A-Z\d]{1,2}_.+(.docx|.xlsx|.pdf)$/;
+      let isMeet = false;
       for (var i = 0; i < document.getElementById("file").files.length; i++) {
-        data.append(`file${i}`, document.getElementById("file").files[i]);
+        const input = document.getElementById("file").files[i].name;
+        if (re.test(input)) {
+          data.append(`file${i}`, document.getElementById("file").files[i]);
+          isMeet = true;
+        } else {
+          this.tishi = "檔名不符合";
+          isMeet = false;
+          this.isLoading = false;
+          break;
+        }
       }
-      axios.post("/api/api/upload", data).then((response) => {
-        // console.log(response.data);
-        this.folderPath = response.data.folderPath;
-        this.uploadList();
-        this.isLoading = false;
-      });
+      if (isMeet) {
+        axios.post("/api/api/upload", data).then((response) => {
+          this.folderPath = response.data.folderPath;
+          this.uploadList();
+          this.isLoading = false;
+        });
+      }
     },
     deleteFile(file) {
       this.isLoading = true;
@@ -231,7 +250,7 @@ export default {
     compare() {
       this.isLoading = true;
       let data = {
-        username: this.name ,
+        username: this.name,
         folderPath: this.folderPath,
       };
       axios.post("/api/api/compare", data).then((response) => {
@@ -272,7 +291,7 @@ export default {
       this.isLoading = true;
       let data = {
         imgsData: this.nonDuplicateImgsData,
-        username: this.name ,
+        username: this.name,
       };
       axios.post("/api/updatedb", data).then((response) => {
         this.isDownloadShow = true;

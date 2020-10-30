@@ -44,7 +44,7 @@
 <script>
 import axios from "axios";
 
-import { setCookie, getCookie } from "../assets/js/cookie";
+import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 

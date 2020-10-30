@@ -38,7 +38,7 @@ import $ from "jquery";
 import Navbar from "@/components/Navbar.vue";
 import Sidebar from "@/components/Sidebar.vue";
 import Footer from "@/components/Footer.vue";
-import { getCookie } from "../assets/js/cookie";
+import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
 
 export default {
   data() {

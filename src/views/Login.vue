@@ -5,7 +5,9 @@
       <h1 class="display-4 text-center mt-5">台化施工相片重複比對系統</h1>
       <div class="row">
         <div class="col"></div>
-        <div class="col"><img src="../assets/台化logo.png" height="250" width="400" /></div>
+        <div class="col">
+          <img src="../assets/台化logo.png" height="250" width="400" />
+        </div>
         <div class="col"></div>
       </div>
 
@@ -35,7 +37,7 @@
           登入
         </button>
       </form>
-      
+
       <Footer />
     </div>
   </div>
@@ -67,10 +69,11 @@ export default {
       if (this.username == "" || this.password == "") {
         alert("請輸入NoteID或者密碼");
       } else {
-        let params = new URLSearchParams();
-        params.append("username", this.username);
-        params.append("password", this.password);
-        axios.post("/api/login", params).then((res) => {
+        let data = {
+          username: this.username,
+          password: this.password,
+        };
+        axios.post("/api/login", data).then((res) => {
           if (res.data == -1) {
             this.tishi = " 該使用者不存在";
             this.showTishi = true;

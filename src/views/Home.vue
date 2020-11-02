@@ -233,7 +233,6 @@ export default {
         folderPath: this.folderPath,
       };
       axios.post("/api/api/delete", data).then((response) => {
-        // console.log(response);
         this.uploadList();
         this.isLoading = false;
       });
@@ -243,7 +242,6 @@ export default {
         folderPath: this.folderPath,
       };
       axios.post("/api/api/getlist", data).then((response) => {
-        // console.log(response);
         this.fileList = response.data.fileList;
       });
     },
@@ -254,7 +252,6 @@ export default {
         folderPath: this.folderPath,
       };
       axios.post("/api/api/compare", data).then((response) => {
-        // console.log(response);
         this.result1 = response.data.result1;
         this.result2 = response.data.result2;
         this.message = response.data.message;

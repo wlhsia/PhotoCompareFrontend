@@ -63,7 +63,7 @@ export default {
     if (uname == "") {
       this.$router.push("/login");
     } else if (uname != "admin") {
-      this.$router.push("/");
+      this.$router.push("/bolt");
     }
   },
   mounted() {

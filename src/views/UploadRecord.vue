@@ -13,6 +13,7 @@
                 <th scope="col">上傳時間</th>
                 <th scope="col">上傳檔案</th>
                 <th scope="col">上傳人員</th>
+                <th scope="col">比對結果</th>
                 <th></th>
               </tr>
             </thead>
@@ -22,6 +23,7 @@
                 <td>{{ item.time }}</td>
                 <td>{{ item.fileName }}</td>
                 <td>{{ item.uploadUser }}</td>
+                <td><a href="" @click.prevent="download(item.result)">{{ item.result }}</a></td>
               </tr>
             </tbody>
           </table>
@@ -51,7 +53,7 @@ export default {
     if (uname == "") {
       this.$router.push("/login");
     } else if (uname != "admin") {
-      this.$router.push("/");
+      this.$router.push("/bolt");
     }
   },
   mounted() {
@@ -61,6 +63,25 @@ export default {
     getUploadRecord() {
       axios.get("/api/uploadrecord").then((res) => {
         this.uploadRecordList = res.data.uploadRecordList;
+      });
+    },
+    download(resultFileName) {
+      this.isLoading = true;
+      axios({
+        url: "api/download",
+        method: "POST",
+        data: {
+          resultFileName: resultFileName,
+        },
+        responseType: "blob",
+      }).then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", resultFileName);
+        document.body.appendChild(link);
+        link.click();
+        this.isLoading = false;
       });
     },
   },

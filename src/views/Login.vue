@@ -61,7 +61,7 @@ export default {
   },
   mounted() {
     if (getCookie("username")) {
-      this.$router.push("/");
+      this.$router.push("/bolt");
     }
   },
   methods: {
@@ -89,7 +89,7 @@ export default {
             setCookie("username", this.username, 1000 * 60);
             setTimeout(
               function () {
-                this.$router.push("/");
+                this.$router.push("/bolt");
               }.bind(this),
               1
             );

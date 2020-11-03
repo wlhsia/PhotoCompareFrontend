@@ -16,6 +16,15 @@
           </button>
           <br />
           <br />
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="搜尋NotesID"
+              v-model="search"
+            />
+          </div>
+          <br />
           <table class="table table-hover">
             <thead>
               <tr>
@@ -28,7 +37,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="(item, index) in userList"
+                v-for="(item, index) in filteredUserList"
                 :key="index"
                 v-show="item.username != 'admin'"
               >
@@ -152,6 +161,7 @@ export default {
       isNew: false,
       userList: [],
       tempUser: {},
+      search:'',
     };
   },
   created() {
@@ -201,6 +211,22 @@ export default {
         console.log(res.data.message);
       });
       this.getUserList();
+    },
+  },
+  computed: {
+    filteredUserList: function () {
+      if (this.search != "") {
+        let r = RegExp("^" + this.search, "i");
+        let newUserList = [];
+        this.userList.forEach((item, index) => {
+          if (r.test(item["username"])) {
+            newUserList.push(item);
+          }
+        });
+        return newUserList;
+      } else {
+        return this.userList;
+      }
     },
   },
   components: {

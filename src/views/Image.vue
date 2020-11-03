@@ -7,6 +7,14 @@
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
           <h3>管理相片資料庫</h3>
           <br />
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="搜尋相片名稱"
+              v-model="search"
+            />
+          </div>
           <br />
           <table class="table table-hover">
             <thead>
@@ -18,11 +26,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="(item, index) in imgList"
-                :key="index"
-              >
-                <td>{{ index+1 }}</td>
+              <tr v-for="(item, index) in filteredImgList" :key="index">
+                <td>{{ index + 1 }}</td>
                 <td>{{ item.imageName }}</td>
                 <td>{{ item.uploadUser }}</td>
                 <td>
@@ -56,6 +61,7 @@ export default {
   data() {
     return {
       imgList: [],
+      search: "",
     };
   },
   created() {
@@ -77,9 +83,26 @@ export default {
     },
     deleteImage(imgName) {
       axios.delete(`/api/delimg/${imgName}`).then((res) => {
-        console.log(res)
+        console.log(res);
       });
-      this.getImageList()
+      this.getImageList();
+    },
+  },
+  computed: {
+    filteredImgList: function () {
+      if (this.search != "") {
+        let r = RegExp("^" + this.search, "i");
+        let newImgList = [];
+        this.imgList.forEach((item, index) => {
+          if (r.test(item["imageName"])) {
+            newImgList.push(item);
+          }
+        });
+        return newImgList;
+      }else{
+        return this.imgList
+      }
+      
     },
   },
   components: {

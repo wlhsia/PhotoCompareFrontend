@@ -6,6 +6,16 @@
         <Sidebar />
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
           <h3>檔案上傳紀錄</h3>
+          <br />
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="搜尋上傳檔案"
+              v-model="search"
+            />
+          </div>
+          <br />
           <table class="table table-hover">
             <thead>
               <tr>
@@ -18,12 +28,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in uploadRecordList" :key="index">
+              <tr v-for="(item, index) in filteredUploadRecordList" :key="index">
                 <td>{{ index + 1 }}</td>
                 <td>{{ item.time }}</td>
                 <td>{{ item.fileName }}</td>
                 <td>{{ item.uploadUser }}</td>
-                <td><a href="" @click.prevent="download(item.result)">{{ item.result }}</a></td>
+                <td>
+                  <a href="" @click.prevent="download(item.result)">{{
+                    item.result
+                  }}</a>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -46,6 +60,7 @@ export default {
   data() {
     return {
       uploadRecordList: [],
+      search: "",
     };
   },
   created() {
@@ -83,6 +98,22 @@ export default {
         link.click();
         this.isLoading = false;
       });
+    },
+  },
+  computed: {
+    filteredUploadRecordList: function () {
+      if (this.search != "") {
+        let r = RegExp("^" + this.search, "i");
+        let newUploadRecordList = [];
+        this.uploadRecordList.forEach((item, index) => {
+          if (r.test(item["fileName"])) {
+            newUploadRecordList.push(item);
+          }
+        });
+        return newUploadRecordList;
+      } else {
+        return this.uploadRecordList;
+      }
     },
   },
   components: {

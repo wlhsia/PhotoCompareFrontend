@@ -8,13 +8,15 @@
         src="../assets/台化logo.png"
         height="60"
         width="90"
+        class="btn"
       />
 
       <h1 class="my-0 mr-md-auto font-weight-normal text-center">
         台化施工相片比對系統
       </h1>
       <h5 class="mr-3 mt-1">{{ username }} </h5>
-      <a class="btn btn-outline-primary" @click.prevent="logout">登出</a>
+      <a v-if="username == 'admin'" class="btn btn-outline-primary" @click.prevent="toUser">管理</a>
+      <a class="btn btn-outline-danger" @click.prevent="logout">登出</a>
     </div>
   </div>
 </template>
@@ -35,6 +37,9 @@ export default {
     },
     toHome() {
       this.$router.push("/bolt");
+    },
+    toUser() {
+      this.$router.push("/user");
     },
   },
   mounted() {

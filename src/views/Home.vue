@@ -1,4 +1,4 @@
-<template>
+ <template>
   <div>
     <loading :active.sync="isLoading"></loading>
     <Navbar />
@@ -83,19 +83,13 @@
               {{ item.imgName1 }}
             </td>
             <td>
-              <img
-                :src="require(`../../../backend/resize_imgs/${item.imgName1}`)"
-                alt=""
-              />
+              <img :src="`static/resize_imgs/${item.imgName1}`" alt="" />
             </td>
             <td>
               {{ item.imgName2 }}
             </td>
             <td>
-              <img
-                :src="require(`../../../backend/resize_imgs/${item.imgName2}`)"
-                alt=""
-              />
+              <img :src="`static/resize_imgs/${item.imgName2}`" alt="" />
             </td>
           </tr>
           <tr class="text-center" v-if="result2.length !== 0">
@@ -107,19 +101,13 @@
               {{ item.imgName1 }}
             </td>
             <td>
-              <img
-                :src="require(`../../../backend/resize_imgs/${item.imgName1}`)"
-                alt=""
-              />
+              <img :src="`static/resize_imgs/${item.imgName1}`" alt="" />
             </td>
             <td>
               {{ item.imgName2 }}
             </td>
             <td>
-              <img
-                :src="require(`../../../backend/resize_imgs/${item.imgName2}`)"
-                alt=""
-              />
+              <img :src="`static/resize_imgs/${item.imgName2}`" alt="" />
             </td>
           </tr>
         </tbody>
@@ -166,10 +154,15 @@
 <script>
 import axios from "axios";
 import $ from "jquery";
-
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
+
+let request = axios.create({
+  headers: { "Content-Type": "application/json" },
+  timeout: 3600000,
+});
+request.defaults.timeout = 3600000;
 
 export default {
   name: "",
@@ -251,18 +244,20 @@ export default {
         username: this.name,
         folderPath: this.folderPath,
       };
-      axios.post("/api/api/compare", data).then((response) => {
-        this.result1 = response.data.result1;
-        this.result2 = response.data.result2;
-        this.message = response.data.message;
-        this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
-        this.resultFileName = response.data.resultFileName;
-        if (this.nonDuplicateImgsData.length == 0) {
-          this.isDownloadShow = true;
-        }
-        this.uploadList();
-        this.isLoading = false;
-      });
+      request
+        .post("/api/api/compare", data, { timeout: 3600000 })
+        .then((response) => {
+          this.result1 = response.data.result1;
+          this.result2 = response.data.result2;
+          this.message = response.data.message;
+          this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
+          this.resultFileName = response.data.resultFileName;
+          if (this.nonDuplicateImgsData.length == 0) {
+            this.isDownloadShow = true;
+          }
+          this.uploadList();
+          this.isLoading = false;
+        });
     },
     download() {
       this.isLoading = true;

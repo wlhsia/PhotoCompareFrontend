@@ -38,6 +38,15 @@
                     item.result
                   }}</a>
                 </td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    @click="deleteRecord(item.fileName, item.result)"
+                  >
+                    刪除
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -99,6 +108,16 @@ export default {
         this.isLoading = false;
       });
     },
+    deleteRecord(fileName, result){
+      let data = {
+        'fileName':fileName,
+        'result':result
+      }
+      axios.post("/api/deletrecord", data).then((res) => {
+        console.log(res)
+        this.getUploadRecord();
+      });
+    }
   },
   computed: {
     filteredUploadRecordList: function () {

@@ -160,9 +160,9 @@ import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
 
 let request = axios.create({
   headers: { "Content-Type": "application/json" },
-  timeout: 3600000,
+  timeout: 0,
 });
-request.defaults.timeout = 3600000;
+// request.defaults.timeout = 0;
 
 export default {
   name: "",
@@ -244,20 +244,17 @@ export default {
         username: this.name,
         folderPath: this.folderPath,
       };
-      request
-        .post("/api/api/compare", data, { timeout: 3600000 })
-        .then((response) => {
-          this.result1 = response.data.result1;
-          this.result2 = response.data.result2;
-          this.message = response.data.message;
-          this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
-          this.resultFileName = response.data.resultFileName;
-          if (this.nonDuplicateImgsData.length == 0) {
-            this.isDownloadShow = true;
-          }
-          this.uploadList();
-          this.isLoading = false;
-        });
+      request.post("/api/api/compare", data).then((response) => {
+        this.result1 = response.data.result1;
+        this.result2 = response.data.result2;
+        this.message = response.data.message;
+        this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
+        this.resultFileName = response.data.resultFileName;
+        if (this.nonDuplicateImgsData.length == 0) {
+          this.isDownloadShow = true;
+        }
+        this.uploadList();
+      });
     },
     download() {
       this.isLoading = true;

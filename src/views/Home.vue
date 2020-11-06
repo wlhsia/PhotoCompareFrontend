@@ -254,6 +254,7 @@ export default {
           this.isDownloadShow = true;
         }
         this.uploadList();
+        this.isLoading = false;
       });
     },
     download() {

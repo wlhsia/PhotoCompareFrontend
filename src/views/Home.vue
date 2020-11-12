@@ -154,15 +154,18 @@
 <script>
 import axios from "axios";
 import $ from "jquery";
+import Agent from "agentkeepalive";
+import http from "http";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
 
-let request = axios.create({
-  headers: { "Content-Type": "application/json" },
-  timeout: 0,
+const keepAliveAgent = new Agent({
+  timeout: 3600000, 
+  freeSocketTimeout: 3600000, 
+  socketActiveTTL: 1000 * 60 * 60,
 });
-// request.defaults.timeout = 0;
+const axiosInstance = axios.create({ httpAgent: keepAliveAgent });
 
 export default {
   name: "",
@@ -244,18 +247,21 @@ export default {
         username: this.name,
         folderPath: this.folderPath,
       };
-      request.post("/api/api/compare", data).then((response) => {
-        this.result1 = response.data.result1;
-        this.result2 = response.data.result2;
-        this.message = response.data.message;
-        this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
-        this.resultFileName = response.data.resultFileName;
-        if (this.nonDuplicateImgsData.length == 0) {
-          this.isDownloadShow = true;
-        }
-        this.uploadList();
-        this.isLoading = false;
-      });
+      const httpAgent = new http.Agent({ keepAlive: true });
+      axiosInstance
+        .post("/api/api/compare", data, { httpAgent })
+        .then((response) => {
+          this.result1 = response.data.result1;
+          this.result2 = response.data.result2;
+          this.message = response.data.message;
+          this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
+          this.resultFileName = response.data.resultFileName;
+          if (this.nonDuplicateImgsData.length == 0) {
+            this.isDownloadShow = true;
+          }
+          this.uploadList();
+          this.isLoading = false;
+        });
     },
     download() {
       this.isLoading = true;
@@ -267,13 +273,21 @@ export default {
         },
         responseType: "blob",
       }).then((response) => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", "比對結果.xlsx");
-        document.body.appendChild(link);
-        link.click();
-        this.isLoading = false;
+        if (navigator.appVersion.toString().indexOf(".NET") > 0) {
+          window.navigator.msSaveBlob(
+            new Blob([response.data]),
+            "比對結果.xlsx"
+          );
+          this.isLoading = false;
+        } else {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", "比對結果.xlsx");
+          document.body.appendChild(link);
+          link.click();
+          this.isLoading = false;
+        }
       });
     },
     updateDB() {

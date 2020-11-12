@@ -10,14 +10,14 @@
         </a> -->
       </h6>
       <ul class="nav flex-column mb-2">
-        <li class="nav-item">
+        <li class="nav-item" v-if="username == 'admin'">
           <a class="nav-link" href="#" @click="toUser">
             <font-awesome-icon icon="users" />
             <span data-feather="file-text"></span>
             使用者
           </a>
         </li>
-        <li class="nav-item" @click="toImageData">
+        <li class="nav-item" @click="toImageData" v-if="username == 'admin'">
           <a class="nav-link" href="#">
             <font-awesome-icon icon="images" />
             <span data-feather="file-text"></span>
@@ -59,6 +59,9 @@ export default {
     toUploadRecord() {
       this.$router.push("/uploadrecord");
     },
+  },
+  mounted() {
+    this.username = getCookie("username");
   },
 };
 </script>

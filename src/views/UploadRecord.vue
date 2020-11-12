@@ -28,7 +28,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in filteredUploadRecordList" :key="index">
+              <tr
+                v-for="(item, index) in filteredUploadRecordList"
+                :key="index"
+              >
                 <td>{{ index + 1 }}</td>
                 <td>{{ item.time }}</td>
                 <td>{{ item.fileName }}</td>
@@ -38,7 +41,7 @@
                     item.result
                   }}</a>
                 </td>
-                <td>
+                <td v-if="username == 'admin'">
                   <button
                     type="button"
                     class="btn btn-danger btn-sm"
@@ -70,14 +73,14 @@ export default {
     return {
       uploadRecordList: [],
       search: "",
+      username: "",
     };
   },
   created() {
-    let uname = getCookie("username");
+    this.username = getCookie("username");
+    let uname = this.username;
     if (uname == "") {
       this.$router.push("/login");
-    } else if (uname != "admin") {
-      this.$router.push("/bolt");
     }
   },
   mounted() {
@@ -99,39 +102,71 @@ export default {
         },
         responseType: "blob",
       }).then((response) => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", resultFileName);
-        document.body.appendChild(link);
-        link.click();
-        this.isLoading = false;
+        if (navigator.appVersion.toString().indexOf(".NET") > 0) {
+          window.navigator.msSaveBlob(
+            new Blob([response.data]),
+            resultFileName
+          );
+          this.isLoading = false;
+        } else {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", resultFileName);
+          document.body.appendChild(link);
+          link.click();
+          this.isLoading = false;
+        }
       });
     },
-    deleteRecord(fileName, result){
+    deleteRecord(fileName, result) {
       let data = {
-        'fileName':fileName,
-        'result':result
-      }
+        fileName: fileName,
+        result: result,
+      };
       axios.post("/api/deletrecord", data).then((res) => {
-        console.log(res)
+        console.log(res);
         this.getUploadRecord();
       });
-    }
+    },
   },
   computed: {
     filteredUploadRecordList: function () {
-      if (this.search != "") {
-        let r = RegExp("^" + this.search, "i");
-        let newUploadRecordList = [];
-        this.uploadRecordList.forEach((item, index) => {
-          if (r.test(item["fileName"])) {
-            newUploadRecordList.push(item);
-          }
-        });
-        return newUploadRecordList;
+      if (this.username == "admin") {
+        if (this.search != "") {
+          let r = RegExp("^" + this.search, "i");
+          let newUploadRecordList = [];
+          this.uploadRecordList.forEach((item, index) => {
+            if (r.test(item["fileName"])) {
+              newUploadRecordList.push(item);
+            }
+          });
+          return newUploadRecordList;
+        } else {
+          return this.uploadRecordList;
+        }
       } else {
-        return this.uploadRecordList;
+        if (this.search != "") {
+          let r = RegExp("^" + this.search, "i");
+          let newUploadRecordList = [];
+          this.uploadRecordList.forEach((item, index) => {
+            if (
+              r.test(item["fileName"]) &&
+              item["uploadUser"] == this.username
+            ) {
+              newUploadRecordList.push(item);
+            }
+          });
+          return newUploadRecordList;
+        } else {
+          let newUploadRecordList = [];
+          this.uploadRecordList.forEach((item, index) => {
+            if (item["uploadUser"] == this.username) {
+              newUploadRecordList.push(item);
+            }
+          });
+          return newUploadRecordList;
+        }
       }
     },
   },

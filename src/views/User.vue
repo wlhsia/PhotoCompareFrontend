@@ -169,7 +169,7 @@ export default {
     if (uname == "") {
       this.$router.push("/login");
     } else if (uname != "admin") {
-      this.$router.push("/bolt");
+      this.$router.push("/uploadrecord");
     }
   },
   mounted() {

@@ -42,7 +42,9 @@
           </td>
         </tr>
       </table>
-      <button
+      <button class="btn btn-primary" id="compare" @click="getImg()">
+        <h3>擷取上傳檔案想片</h3></button
+      ><button
         :disabled="isDisabled"
         id="compare"
         class="btn btn-primary"
@@ -50,6 +52,9 @@
       >
         <h3>比對施工相片</h3>
       </button>
+      <br />
+      <br />
+      <h3>照片數：{{ imgsNum }}</h3>
       <br />
       <br />
       <div>
@@ -161,8 +166,8 @@ import Footer from "@/components/Footer.vue";
 import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
 
 const keepAliveAgent = new Agent({
-  timeout: 3600000, 
-  freeSocketTimeout: 3600000, 
+  timeout: 3600000,
+  freeSocketTimeout: 3600000,
   socketActiveTTL: 1000 * 60 * 60,
 });
 const axiosInstance = axios.create({ httpAgent: keepAliveAgent });
@@ -175,12 +180,14 @@ export default {
       isDownloadShow: false,
       fileList: [],
       folderPath: "",
+      imgsPath: "",
       result1: [],
       result2: [],
       message: [],
       nonDuplicateImgs: [],
       nonDuplicateImgsData: [],
       tishi: "",
+      imgsNum: 0,
     };
   },
   methods: {
@@ -239,6 +246,17 @@ export default {
       };
       axios.post("/api/api/getlist", data).then((response) => {
         this.fileList = response.data.fileList;
+      });
+    },
+    getImg() {
+      this.isLoading = true;
+      let data = {
+        folderPath: this.folderPath,
+      };
+      axiosInstance.post("/api/api/getImg", data).then((response) => {
+        this.imgsNum = response.data.imgsNum;
+        this.imgsPath = response.data.imgsPath;
+        this.isLoading = false;
       });
     },
     compare() {

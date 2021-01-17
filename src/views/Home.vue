@@ -15,10 +15,15 @@
         </p>
       </div>
       <p class="text-danger">{{ tishi }}</p>
-      <input id="file" multiple type="file" :disabled="!isDisabled" />
+      <!-- <input id="file" multiple type="file" :disabled="!isDisabled" /> -->
+      <input id="file" type="file" />
       <br />
       <br />
-      <button :disabled="!isDisabled" class="btn btn-primary" @click="upload">
+      <button
+        class="btn btn-primary"
+        @click="upload"
+        :disabled="fileList.length != 0"
+      >
         <h3>上傳施工相片檔案</h3>
       </button>
       <br />
@@ -35,6 +40,7 @@
                 type="button"
                 class="btn btn-danger"
                 @click="deleteFile(file)"
+                :disabled="imgsNum != 0"
               >
                 刪除
               </button>
@@ -42,24 +48,27 @@
           </td>
         </tr>
       </table>
-      <button class="btn btn-primary" id="compare" @click="getImg()">
-        <h3>擷取上傳檔案想片</h3></button
-      ><button
-        :disabled="isDisabled"
+      <button
+        class="btn btn-primary"
+        id="compare"
+        @click="getImg()"
+        :disabled="fileList.length == 0 || imgsNum != 0"
+      >
+        <h3>擷取上傳檔案相片</h3></button
+      >&emsp;<button
+        :disabled="imgsNum == 0"
         id="compare"
         class="btn btn-primary"
         @click="compare()"
       >
-        <h3>比對施工相片</h3>
+        <h3>相片重複比對</h3>
       </button>
       <br />
       <br />
-      <h3>照片數：{{ imgsNum }}</h3>
+      <h3>上傳相片數：{{ imgsNum }}&emsp;重複相片數：{{ duplicateImgsNum }}</h3>
       <br />
-      <br />
-      <div>
-        <h3 class="text-danger">{{ message[0] }}</h3>
-        <h3 class="text-danger">{{ message[1] }}</h3>
+      <div v-if="nonDuplicateImgsData.length !== 0">
+        <h3 class="text-danger">{{ message }}</h3>
         <button
           class="btn btn-danger"
           @click="openDBModal"
@@ -125,7 +134,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Modal title</h5>
+            <h5 class="modal-title">提示</h5>
             <button
               type="button"
               class="close"
@@ -165,13 +174,6 @@ import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
 
-const keepAliveAgent = new Agent({
-  timeout: 3600000,
-  freeSocketTimeout: 3600000,
-  socketActiveTTL: 1000 * 60 * 60,
-});
-const axiosInstance = axios.create({ httpAgent: keepAliveAgent });
-
 export default {
   name: "",
   data() {
@@ -183,11 +185,11 @@ export default {
       imgsPath: "",
       result1: [],
       result2: [],
-      message: [],
-      nonDuplicateImgs: [],
+      message: '',
       nonDuplicateImgsData: [],
       tishi: "",
       imgsNum: 0,
+      duplicateImgsNum: 0,
     };
   },
   methods: {
@@ -253,7 +255,7 @@ export default {
       let data = {
         folderPath: this.folderPath,
       };
-      axiosInstance.post("/api/api/getImg", data).then((response) => {
+      axios.post("/api/api/getImg", data).then((response) => {
         this.imgsNum = response.data.imgsNum;
         this.imgsPath = response.data.imgsPath;
         this.isLoading = false;
@@ -263,23 +265,24 @@ export default {
       this.isLoading = true;
       let data = {
         username: this.name,
+        fileList: this.fileList,
         folderPath: this.folderPath,
+        imgsPath: this.imgsPath,
       };
       const httpAgent = new http.Agent({ keepAlive: true });
-      axiosInstance
-        .post("/api/api/compare", data, { httpAgent })
-        .then((response) => {
-          this.result1 = response.data.result1;
-          this.result2 = response.data.result2;
-          this.message = response.data.message;
-          this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
-          this.resultFileName = response.data.resultFileName;
-          if (this.nonDuplicateImgsData.length == 0) {
-            this.isDownloadShow = true;
-          }
-          this.uploadList();
-          this.isLoading = false;
-        });
+      axios.post("/api/api/compare", data, { httpAgent }).then((response) => {
+        this.result1 = response.data.result1;
+        this.result2 = response.data.result2;
+        this.duplicateImgsNum = response.data.duplicateImgsNum;
+        this.message = response.data.message;
+        this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
+        this.resultFileName = response.data.resultFileName;
+        if (this.nonDuplicateImgsData.length == 0) {
+          this.isDownloadShow = true;
+        }
+        this.uploadList();
+        this.isLoading = false;
+      });
     },
     download() {
       this.isLoading = true;

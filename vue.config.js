@@ -6,7 +6,9 @@ module.exports = {
         changeOrigin: true,
         pathRewrite: {
           "^/api": ""
-        }
+        },
+        proxyTimeout: 1000 * 60 * 30,
+        timeout: 1000 * 60 * 30
       },
     }
   },

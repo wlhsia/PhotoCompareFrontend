@@ -11,11 +11,12 @@
           <br />(3)檔名須為「工程編號(8碼英文數字)_公司代號(4,
           RV)_檔案名稱(無限制)+附檔名(.docx, .xlsx, .pdf)」
           <br />&emsp;&emsp;例如：「ABCD1234_4_001-006.docx」或「ABCD1234_RV_001-006.pdf」
-          <br />(4)上傳PDF檔案相片須為正面朝上或正面朝右
+          <br />(4)上傳PDF檔案相片須為正面朝上
         </p>
       </div>
-      <p class="text-danger">{{ tishi }}</p>
-      <!-- <input id="file" multiple type="file" :disabled="!isDisabled" /> -->
+      <div class="alert alert-danger" role="alert" v-if="alert.length > 0">
+        {{ alert }}
+      </div>
       <input id="file" type="file" />
       <br />
       <br />
@@ -56,7 +57,7 @@
       >
         <h3>擷取上傳檔案相片</h3></button
       >&emsp;<button
-        :disabled="imgsNum == 0"
+        :disabled="imgsNum == 0 || isDownloadShow"
         id="compare"
         class="btn btn-primary"
         @click="compare()"
@@ -67,7 +68,7 @@
       <br />
       <h3>上傳相片數：{{ imgsNum }}&emsp;重複相片數：{{ duplicateImgsNum }}</h3>
       <br />
-      <div v-if="nonDuplicateImgsData.length !== 0">
+      <div>
         <h3 class="text-danger">{{ message }}</h3>
         <button
           class="btn btn-danger"
@@ -78,9 +79,13 @@
         </button>
       </div>
       <br />
-      <a href="" @click.prevent="download" v-if="isDownloadShow"
-        ><h3>下載比對結果</h3></a
-      >
+      <div v-if="isDownloadShow">
+        <h3>下載比對結果</h3>
+        <a href="" @click.prevent="download"
+          ><h3>{{ resultFileName }}</h3></a
+        >
+      </div>
+
       <br />
       <table class="table table-striped table-hover" v-show="isTableShow">
         <thead class="thead-dark text-center">
@@ -185,9 +190,10 @@ export default {
       imgsPath: "",
       result1: [],
       result2: [],
-      message: '',
+      resultFileName: "",
+      message: "",
       nonDuplicateImgsData: [],
-      tishi: "",
+      alert: "",
       imgsNum: 0,
       duplicateImgsNum: 0,
     };
@@ -202,14 +208,16 @@ export default {
     },
     upload() {
       this.isLoading = true;
-      this.tishi = "";
+      this.imgsNum = 0;
+      this.duplicateImgsNum = 0;
+      this.alert = "";
       this.result1 = [];
       this.result2 = [];
-      this.message = [];
+      this.message = "";
       this.nonDuplicateImgsData = [];
       this.isDownloadShow = false;
       let data = new FormData();
-      const re = /^[A-Z\d]{8}_[A-Z\d]{1,2}_.+(.docx|.xlsx|.pdf)$/;
+      const re = /^.{8}_[A-Z\d]{1,2}_.+(.docx|.xlsx|.pdf)$/;
       let isMeet = false;
       for (var i = 0; i < document.getElementById("file").files.length; i++) {
         const input = document.getElementById("file").files[i].name;
@@ -217,18 +225,24 @@ export default {
           data.append(`file${i}`, document.getElementById("file").files[i]);
           isMeet = true;
         } else {
-          this.tishi = "檔名不符合";
+          this.alert = "檔名不符合";
           isMeet = false;
           this.isLoading = false;
           break;
         }
       }
       if (isMeet) {
-        axios.post("/api/api/upload", data).then((response) => {
-          this.folderPath = response.data.folderPath;
-          this.uploadList();
-          this.isLoading = false;
-        });
+        axios
+          .post("/api/api/upload", data)
+          .then((response) => {
+            this.folderPath = response.data.folderPath;
+            this.uploadList();
+            this.isLoading = false;
+          })
+          .catch((err) => {
+            this.alert = "檔案上傳失敗請重試";
+            this.isLoading = false;
+          });
       }
     },
     deleteFile(file) {
@@ -251,17 +265,25 @@ export default {
       });
     },
     getImg() {
+      this.alert = "";
       this.isLoading = true;
       let data = {
         folderPath: this.folderPath,
       };
-      axios.post("/api/api/getImg", data).then((response) => {
-        this.imgsNum = response.data.imgsNum;
-        this.imgsPath = response.data.imgsPath;
-        this.isLoading = false;
-      });
+      axios
+        .post("/api/api/getImg", data)
+        .then((response) => {
+          this.imgsNum = response.data.imgsNum;
+          this.imgsPath = response.data.imgsPath;
+          this.isLoading = false;
+        })
+        .catch((err) => {
+          this.alert = "擷取相片失敗請重試";
+          this.isLoading = false;
+        });
     },
     compare() {
+      this.alert = "";
       this.isLoading = true;
       let data = {
         username: this.name,
@@ -270,19 +292,25 @@ export default {
         imgsPath: this.imgsPath,
       };
       const httpAgent = new http.Agent({ keepAlive: true });
-      axios.post("/api/api/compare", data, { httpAgent }).then((response) => {
-        this.result1 = response.data.result1;
-        this.result2 = response.data.result2;
-        this.duplicateImgsNum = response.data.duplicateImgsNum;
-        this.message = response.data.message;
-        this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
-        this.resultFileName = response.data.resultFileName;
-        if (this.nonDuplicateImgsData.length == 0) {
-          this.isDownloadShow = true;
-        }
-        this.uploadList();
-        this.isLoading = false;
-      });
+      axios
+        .post("/api/api/compare", data, { httpAgent })
+        .then((response) => {
+          this.result1 = response.data.result1;
+          this.result2 = response.data.result2;
+          this.duplicateImgsNum = response.data.duplicateImgsNum;
+          this.message = response.data.message;
+          this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
+          this.resultFileName = response.data.resultFileName;
+          if (this.duplicateImgsNum !== 0) {
+            this.isDownloadShow = true;
+          }
+          this.uploadList();
+          this.isLoading = false;
+        })
+        .catch((err) => {
+          this.alert = "重複比對失敗請重試";
+          this.isLoading = false;
+        });
     },
     download() {
       this.isLoading = true;
@@ -297,14 +325,14 @@ export default {
         if (navigator.appVersion.toString().indexOf(".NET") > 0) {
           window.navigator.msSaveBlob(
             new Blob([response.data]),
-            "比對結果.xlsx"
+            this.resultFileName
           );
           this.isLoading = false;
         } else {
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement("a");
           link.href = url;
-          link.setAttribute("download", "比對結果.xlsx");
+          link.setAttribute("download", this.resultFileName);
           document.body.appendChild(link);
           link.click();
           this.isLoading = false;
@@ -325,13 +353,6 @@ export default {
     },
   },
   computed: {
-    isDisabled() {
-      if (this.fileList.length == 0) {
-        return true;
-      } else {
-        return false;
-      }
-    },
     isTableShow() {
       if (this.result1.length !== 0 || this.result2.length !== 0) {
         return true;

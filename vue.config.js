@@ -7,8 +7,8 @@ module.exports = {
         pathRewrite: {
           "^/api": ""
         },
-        proxyTimeout: 1000 * 60 * 30,
-        timeout: 1000 * 60 * 30
+        proxyTimeout: 1000 * 60 * 60,
+        timeout: 1000 * 60 * 60
       },
     }
   },

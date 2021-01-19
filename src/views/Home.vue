@@ -233,7 +233,7 @@ export default {
       }
       if (isMeet) {
         axios
-          .post("/api/api/upload", data)
+          .post("/api/upload", data)
           .then((response) => {
             this.folderPath = response.data.folderPath;
             this.uploadList();
@@ -251,7 +251,7 @@ export default {
         file: file,
         folderPath: this.folderPath,
       };
-      axios.post("/api/api/delete", data).then((response) => {
+      axios.post("/api/delete", data).then((response) => {
         this.uploadList();
         this.isLoading = false;
       });
@@ -260,7 +260,7 @@ export default {
       let data = {
         folderPath: this.folderPath,
       };
-      axios.post("/api/api/getlist", data).then((response) => {
+      axios.post("/api/getlist", data).then((response) => {
         this.fileList = response.data.fileList;
       });
     },
@@ -271,7 +271,7 @@ export default {
         folderPath: this.folderPath,
       };
       axios
-        .post("/api/api/getImg", data)
+        .post("/api/getImg", data)
         .then((response) => {
           this.imgsNum = response.data.imgsNum;
           this.imgsPath = response.data.imgsPath;
@@ -293,7 +293,7 @@ export default {
       };
       const httpAgent = new http.Agent({ keepAlive: true });
       axios
-        .post("/api/api/compare", data, { httpAgent })
+        .post("/api/compare", data, { httpAgent })
         .then((response) => {
           this.result1 = response.data.result1;
           this.result2 = response.data.result2;
@@ -315,7 +315,7 @@ export default {
     download() {
       this.isLoading = true;
       axios({
-        url: "api/download",
+        url: "/api/download",
         method: "POST",
         data: {
           resultFileName: this.resultFileName,

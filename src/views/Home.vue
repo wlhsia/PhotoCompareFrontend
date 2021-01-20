@@ -20,34 +20,49 @@
       <input id="file" type="file" />
       <br />
       <br />
-      <button
-        class="btn btn-primary"
-        @click="upload"
-        :disabled="fileList.length != 0"
-      >
+      <button class="btn btn-primary" @click="upload">
         <h3>上傳施工相片檔案</h3>
       </button>
       <br />
       <br />
-      <h3>已上傳的檔案</h3>
-      <table class="table">
-        <tr v-for="(file, index) in fileList" :key="index">
-          <td>
-            <h3>{{ file }}</h3>
-          </td>
-          <td>
-            <h3>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th><h3>已上傳的檔案</h3></th>
+            <th><h3>相片數</h3></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(file, index) in fileList" :key="index">
+            <td>
+              <h3>{{ file }}</h3>
+            </td>
+            <td></td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-warning"
+                @click="deleteFile(file)"
+              >
+                擷取相片</button
+              >&emsp;
               <button
                 type="button"
                 class="btn btn-danger"
                 @click="deleteFile(file)"
-                :disabled="imgsNum != 0"
               >
                 刪除
               </button>
-            </h3>
-          </td>
-        </tr>
+            </td>
+          </tr>
+          <tr>
+            <td><h3>總上傳相片數</h3></td>
+            <td>
+              <h3>{{ imgsNum }}</h3>
+            </td>
+          </tr>
+        </tbody>
       </table>
       <button
         class="btn btn-primary"
@@ -216,13 +231,13 @@ export default {
       this.message = "";
       this.nonDuplicateImgsData = [];
       this.isDownloadShow = false;
-      let data = new FormData();
+      let formData = new FormData();
       const re = /^.{8}_[A-Z\d]{1,2}_.+(.docx|.xlsx|.pdf)$/;
       let isMeet = false;
       for (var i = 0; i < document.getElementById("file").files.length; i++) {
         const input = document.getElementById("file").files[i].name;
         if (re.test(input)) {
-          data.append(`file${i}`, document.getElementById("file").files[i]);
+          formData.append(`file${i}`, document.getElementById("file").files[i]);
           isMeet = true;
         } else {
           this.alert = "檔名不符合";
@@ -232,11 +247,16 @@ export default {
         }
       }
       if (isMeet) {
+        let data = {
+          formData,
+          username: this.name,
+        };
+        console.log(data);
         axios
-          .post("/api/upload", data)
+          .post("/api/upload", formData)
           .then((response) => {
             this.folderPath = response.data.folderPath;
-            this.uploadList();
+            // this.uploadList();
             this.isLoading = false;
           })
           .catch((err) => {
@@ -368,6 +388,16 @@ export default {
     if (uname == "") {
       this.$router.push("/login");
     }
+    let data = {
+      username: this.name,
+    };
+    axios.post("/api/create", data).then((response) => {});
+  },
+  destroyed() {
+    let data = {
+      username: this.name,
+    };
+    axios.post("/api/destroy", data).then((response) => {});
   },
   components: {
     Navbar,

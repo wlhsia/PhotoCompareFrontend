@@ -1,3 +1,4 @@
+  
  <template>
   <div>
     <loading :active.sync="isLoading"></loading>
@@ -11,7 +12,7 @@
           <br />(3)檔名須為「工程編號(8碼英文數字)_公司代號(4,
           RV)_檔案名稱(無限制)+附檔名(.docx, .xlsx, .pdf)」
           <br />&emsp;&emsp;例如：「ABCD1234_4_001-006.docx」或「ABCD1234_RV_001-006.pdf」
-          <br />(4)上傳PDF檔案相片須為正面朝上
+          <br />(4)上傳PDF檔案相片須為正面朝上或正面朝右
         </p>
       </div>
       <div class="alert alert-danger" role="alert" v-if="alert.length > 0">
@@ -20,49 +21,34 @@
       <input id="file" type="file" />
       <br />
       <br />
-      <button class="btn btn-primary" @click="upload">
+      <button
+        class="btn btn-primary"
+        @click="upload"
+        :disabled="fileList.length != 0"
+      >
         <h3>上傳施工相片檔案</h3>
       </button>
       <br />
       <br />
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th><h3>已上傳的檔案</h3></th>
-            <th><h3>相片數</h3></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(file, index) in fileList" :key="index">
-            <td>
-              <h3>{{ file }}</h3>
-            </td>
-            <td></td>
-            <td>
-              <button
-                type="button"
-                class="btn btn-warning"
-                @click="deleteFile(file)"
-              >
-                擷取相片</button
-              >&emsp;
+      <h3>已上傳的檔案</h3>
+      <table class="table">
+        <tr v-for="(file, index) in fileList" :key="index">
+          <td>
+            <h3>{{ file }}</h3>
+          </td>
+          <td>
+            <h3>
               <button
                 type="button"
                 class="btn btn-danger"
                 @click="deleteFile(file)"
+                :disabled="imgsNum != 0"
               >
                 刪除
               </button>
-            </td>
-          </tr>
-          <tr>
-            <td><h3>總上傳相片數</h3></td>
-            <td>
-              <h3>{{ imgsNum }}</h3>
-            </td>
-          </tr>
-        </tbody>
+            </h3>
+          </td>
+        </tr>
       </table>
       <button
         class="btn btn-primary"
@@ -72,7 +58,7 @@
       >
         <h3>擷取上傳檔案相片</h3></button
       >&emsp;<button
-        :disabled="imgsNum == 0 || isDownloadShow"
+        :disabled="imgsNum == 0"
         id="compare"
         class="btn btn-primary"
         @click="compare()"
@@ -83,7 +69,7 @@
       <br />
       <h3>上傳相片數：{{ imgsNum }}&emsp;重複相片數：{{ duplicateImgsNum }}</h3>
       <br />
-      <div>
+      <div v-if="nonDuplicateImgsData.length !== 0">
         <h3 class="text-danger">{{ message }}</h3>
         <button
           class="btn btn-danger"
@@ -100,7 +86,6 @@
           ><h3>{{ resultFileName }}</h3></a
         >
       </div>
-
       <br />
       <table class="table table-striped table-hover" v-show="isTableShow">
         <thead class="thead-dark text-center">
@@ -193,7 +178,6 @@ import http from "http";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { setCookie, getCookie, delCookie } from "../assets/js/cookie.js";
-
 export default {
   name: "",
   data() {
@@ -205,7 +189,6 @@ export default {
       imgsPath: "",
       result1: [],
       result2: [],
-      resultFileName: "",
       message: "",
       nonDuplicateImgsData: [],
       alert: "",
@@ -223,21 +206,21 @@ export default {
     },
     upload() {
       this.isLoading = true;
-      this.imgsNum = 0;
-      this.duplicateImgsNum = 0;
       this.alert = "";
       this.result1 = [];
       this.result2 = [];
-      this.message = "";
+      this.imgsNum = 0;
+      this.duplicateImgsNum = 0;
+      this.message = [];
       this.nonDuplicateImgsData = [];
       this.isDownloadShow = false;
-      let formData = new FormData();
+      let data = new FormData();
       const re = /^.{8}_[A-Z\d]{1,2}_.+(.docx|.xlsx|.pdf)$/;
       let isMeet = false;
       for (var i = 0; i < document.getElementById("file").files.length; i++) {
         const input = document.getElementById("file").files[i].name;
         if (re.test(input)) {
-          formData.append(`file${i}`, document.getElementById("file").files[i]);
+          data.append(`file${i}`, document.getElementById("file").files[i]);
           isMeet = true;
         } else {
           this.alert = "檔名不符合";
@@ -247,16 +230,12 @@ export default {
         }
       }
       if (isMeet) {
-        let data = {
-          formData,
-          username: this.name,
-        };
-        console.log(data);
+        data.append("username", this.name);
         axios
-          .post("/api/upload", formData)
+          .post("/api/upload", data)
           .then((response) => {
             this.folderPath = response.data.folderPath;
-            // this.uploadList();
+            this.uploadList();
             this.isLoading = false;
           })
           .catch((err) => {
@@ -285,7 +264,6 @@ export default {
       });
     },
     getImg() {
-      this.alert = "";
       this.isLoading = true;
       let data = {
         folderPath: this.folderPath,
@@ -303,7 +281,6 @@ export default {
         });
     },
     compare() {
-      this.alert = "";
       this.isLoading = true;
       let data = {
         username: this.name,
@@ -321,7 +298,7 @@ export default {
           this.message = response.data.message;
           this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
           this.resultFileName = response.data.resultFileName;
-          if (this.duplicateImgsNum !== 0) {
+          if (this.nonDuplicateImgsData.length == 0) {
             this.isDownloadShow = true;
           }
           this.uploadList();
@@ -335,7 +312,7 @@ export default {
     download() {
       this.isLoading = true;
       axios({
-        url: "/api/download",
+        url: "api/download",
         method: "POST",
         data: {
           resultFileName: this.resultFileName,
@@ -345,14 +322,14 @@ export default {
         if (navigator.appVersion.toString().indexOf(".NET") > 0) {
           window.navigator.msSaveBlob(
             new Blob([response.data]),
-            this.resultFileName
+            "比對結果.xlsx"
           );
           this.isLoading = false;
         } else {
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement("a");
           link.href = url;
-          link.setAttribute("download", this.resultFileName);
+          link.setAttribute("download", "比對結果.xlsx");
           document.body.appendChild(link);
           link.click();
           this.isLoading = false;
@@ -373,6 +350,13 @@ export default {
     },
   },
   computed: {
+    isDisabled() {
+      if (this.fileList.length == 0) {
+        return true;
+      } else {
+        return false;
+      }
+    },
     isTableShow() {
       if (this.result1.length !== 0 || this.result2.length !== 0) {
         return true;
@@ -388,16 +372,6 @@ export default {
     if (uname == "") {
       this.$router.push("/login");
     }
-    let data = {
-      username: this.name,
-    };
-    axios.post("/api/create", data).then((response) => {});
-  },
-  destroyed() {
-    let data = {
-      username: this.name,
-    };
-    axios.post("/api/destroy", data).then((response) => {});
   },
   components: {
     Navbar,

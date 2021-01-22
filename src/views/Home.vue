@@ -6,25 +6,32 @@
     <div class="container">
       <div class="jumbotron">
         <p class="lead text-danger">
-          上傳檔案注意事項：
-          <br />(1)檔案類型須為.docx, .xlsx, .pdf
+          注意事項：
+          <br />(1)上傳檔案類型須為.docx, .xlsx, .pdf
           <br />(2)檔名勿使用中文及'~'符號
           <br />(3)檔名須為「工程編號(8碼英文數字)_公司代號(4,
           RV)_檔案名稱(無限制)+附檔名(.docx, .xlsx, .pdf)」
-          <br />&emsp;&emsp;例如：「ABCD1234_4_001-006.docx」或「ABCD1234_RV_001-006.pdf」
-          <br />(4)上傳PDF檔案相片須為正面朝上或正面朝右
+          <br />例如：「ABCD1234_4_001-006.docx」或「ABCD1234_RV_001-006.pdf」
+          <br />(4)上傳檔案之相片須為正面朝上
+          <br />(5)點選出表後會自動將無重複照片寫入資料庫
+          <br />(6)如有任何報錯請按重新整理，再執行一次
         </p>
       </div>
       <div class="alert alert-danger" role="alert" v-if="alert.length > 0">
         {{ alert }}
       </div>
-      <input id="file" type="file" />
+      <input id="file" type="file" /><button
+        class="btn btn-warning rounded-pill"
+        @click="reset()"
+      >
+        重新整理
+      </button>
       <br />
       <br />
       <button
-        class="btn btn-primary"
+        class="btn btn-info"
         @click="upload"
-        :disabled="fileList.length != 0"
+        :disabled="fileList.length !== 0"
       >
         <h3>上傳施工相片檔案</h3>
       </button>
@@ -42,7 +49,6 @@
                 type="button"
                 class="btn btn-danger"
                 @click="deleteFile(file)"
-                :disabled="imgsNum != 0"
               >
                 刪除
               </button>
@@ -51,41 +57,38 @@
         </tr>
       </table>
       <button
-        class="btn btn-primary"
+        class="btn btn-info"
         id="compare"
         @click="getImg()"
-        :disabled="fileList.length == 0 || imgsNum != 0"
+        :disabled="fileList.length == 0 || imgsNum !== null"
       >
         <h3>擷取上傳檔案相片</h3></button
       >&emsp;<button
-        :disabled="imgsNum == 0"
         id="compare"
-        class="btn btn-primary"
+        class="btn btn-info"
         @click="compare()"
+        :disabled="
+          imgsNum === 0 || imgsNum === null || duplicateImgsNum !== null
+        "
       >
         <h3>相片重複比對</h3>
       </button>
       <br />
       <br />
-      <h3>上傳相片數：{{ imgsNum }}&emsp;重複相片數：{{ duplicateImgsNum }}</h3>
+
+      <h3>
+        上傳相片數：{{ imgsNum }}&emsp;重複相片數：{{ duplicateImgsNum }}&emsp;
+      </h3>
       <br />
-      <div v-if="nonDuplicateImgsData.length !== 0">
-        <h3 class="text-danger">{{ message }}</h3>
-        <button
-          class="btn btn-danger"
-          @click="openDBModal"
-          v-if="nonDuplicateImgsData.length !== 0"
-        >
-          <h3>是</h3>
-        </button>
-      </div>
+      <button
+        class="btn btn-outline-danger btn-lg btn-block"
+        @click="openModal"
+        v-if="duplicateImgsNum !== null"
+      >
+        <h3>出表</h3>
+      </button>
+
       <br />
-      <div v-if="isDownloadShow">
-        <h3>下載比對結果</h3>
-        <a href="" @click.prevent="download"
-          ><h3>{{ resultFileName }}</h3></a
-        >
-      </div>
       <br />
       <table class="table table-striped table-hover" v-show="isTableShow">
         <thead class="thead-dark text-center">
@@ -135,11 +138,11 @@
     </div>
 
     <!-- modal -->
-    <div class="modal" tabindex="-1" id="dbModal">
+    <div class="modal" tabindex="-1" id="modal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">提示</h5>
+            <h5 class="modal-title">提醒</h5>
             <button
               type="button"
               class="close"
@@ -150,7 +153,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <p>確認要將相片存入資料庫</p>
+            <p>出表後，無重複相片將會寫入資料庫。</p>
           </div>
           <div class="modal-footer">
             <button
@@ -160,7 +163,7 @@
             >
               取消
             </button>
-            <button type="button" class="btn btn-primary" @click="updateDB">
+            <button type="button" class="btn btn-info" @click="output">
               確定
             </button>
           </div>
@@ -183,37 +186,53 @@ export default {
   data() {
     return {
       isLoading: false,
-      isDownloadShow: false,
-      fileList: [],
+      alert: "",
       folderPath: "",
       imgsPath: "",
+      fileList: [],
       result1: [],
       result2: [],
-      message: "",
       nonDuplicateImgsData: [],
-      alert: "",
-      imgsNum: 0,
-      duplicateImgsNum: 0,
+      imgsNum: null,
+      duplicateImgsNum: null,
     };
   },
   methods: {
-    openDBModal() {
-      $("#dbModal").modal("show");
+    openModal() {
+      $("#modal").modal("show");
     },
     logout() {
       delCookie("username");
       this.$router.push("/login");
     },
-    upload() {
-      this.isLoading = true;
+    createFolder() {
+      let data = {
+        username: this.name,
+      };
+      axios.post("/api/createfolder", data).then((response) => {
+        this.folderPath = response.data.folderPath;
+        this.imgsPath = response.data.imgsPath;
+      });
+    },
+    deleteFolder() {
+      let data = {
+        username: this.name,
+      };
+      axios.post("/api/deletefolder", data).then((response) => {});
+    },
+    reset() {
+      this.deleteFolder();
       this.alert = "";
+      this.fileList = [];
       this.result1 = [];
       this.result2 = [];
-      this.imgsNum = 0;
-      this.duplicateImgsNum = 0;
-      this.message = [];
+      this.imgsNum = null;
+      this.duplicateImgsNum = null;
       this.nonDuplicateImgsData = [];
-      this.isDownloadShow = false;
+      this.createFolder();
+    },
+    upload() {
+      this.isLoading = true;
       let data = new FormData();
       const re = /^.{8}_[A-Z\d]{1,2}_.+(.docx|.xlsx|.pdf)$/;
       let isMeet = false;
@@ -234,7 +253,6 @@ export default {
         axios
           .post("/api/upload", data)
           .then((response) => {
-            this.folderPath = response.data.folderPath;
             this.uploadList();
             this.isLoading = false;
           })
@@ -243,6 +261,14 @@ export default {
             this.isLoading = false;
           });
       }
+    },
+    uploadList() {
+      let data = {
+        folderPath: this.folderPath,
+      };
+      axios.post("/api/getlist", data).then((response) => {
+        this.fileList = response.data.fileList;
+      });
     },
     deleteFile(file) {
       this.isLoading = true;
@@ -255,24 +281,16 @@ export default {
         this.isLoading = false;
       });
     },
-    uploadList() {
-      let data = {
-        folderPath: this.folderPath,
-      };
-      axios.post("/api/getlist", data).then((response) => {
-        this.fileList = response.data.fileList;
-      });
-    },
     getImg() {
       this.isLoading = true;
       let data = {
         folderPath: this.folderPath,
+        imgsPath: this.imgsPath,
       };
       axios
         .post("/api/getImg", data)
         .then((response) => {
           this.imgsNum = response.data.imgsNum;
-          this.imgsPath = response.data.imgsPath;
           this.isLoading = false;
         })
         .catch((err) => {
@@ -284,7 +302,6 @@ export default {
       this.isLoading = true;
       let data = {
         username: this.name,
-        fileList: this.fileList,
         folderPath: this.folderPath,
         imgsPath: this.imgsPath,
       };
@@ -295,13 +312,7 @@ export default {
           this.result1 = response.data.result1;
           this.result2 = response.data.result2;
           this.duplicateImgsNum = response.data.duplicateImgsNum;
-          this.message = response.data.message;
           this.nonDuplicateImgsData = response.data.nonDuplicateImgsData;
-          this.resultFileName = response.data.resultFileName;
-          if (this.nonDuplicateImgsData.length == 0) {
-            this.isDownloadShow = true;
-          }
-          this.uploadList();
           this.isLoading = false;
         })
         .catch((err) => {
@@ -309,54 +320,49 @@ export default {
           this.isLoading = false;
         });
     },
-    download() {
+    output() {
       this.isLoading = true;
+      $("#modal").modal("hide");
       axios({
-        url: "api/download",
+        url: "api/output",
         method: "POST",
         data: {
-          resultFileName: this.resultFileName,
+          username: this.name,
+          folderPath: this.folderPath,
+          imgsPath: this.imgsPath,
+          fileList: this.fileList,
+          result1: this.result1,
+          result2: this.result2,
+          imgsNum: this.imgsNum,
+          duplicateImgsNum: this.duplicateImgsNum,
+          nonDuplicateImgsData: this.nonDuplicateImgsData,
         },
         responseType: "blob",
-      }).then((response) => {
-        if (navigator.appVersion.toString().indexOf(".NET") > 0) {
-          window.navigator.msSaveBlob(
-            new Blob([response.data]),
-            "比對結果.xlsx"
-          );
+      })
+        .then((response) => {
+          if (navigator.appVersion.toString().indexOf(".NET") > 0) {
+            window.navigator.msSaveBlob(
+              new Blob([response.data]),
+              "比對結果.pdf"
+            );
+            this.isLoading = false;
+          } else {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "比對結果.pdf");
+            document.body.appendChild(link);
+            link.click();
+            this.isLoading = false;
+          }
+        })
+        .catch((err) => {
+          this.alert = "出表失敗請重試";
           this.isLoading = false;
-        } else {
-          const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement("a");
-          link.href = url;
-          link.setAttribute("download", "比對結果.xlsx");
-          document.body.appendChild(link);
-          link.click();
-          this.isLoading = false;
-        }
-      });
-    },
-    updateDB() {
-      $("#dbModal").modal("hide");
-      this.isLoading = true;
-      let data = {
-        imgsData: this.nonDuplicateImgsData,
-        username: this.name,
-      };
-      axios.post("/api/updatedb", data).then((response) => {
-        this.isDownloadShow = true;
-        this.isLoading = false;
-      });
+        });
     },
   },
   computed: {
-    isDisabled() {
-      if (this.fileList.length == 0) {
-        return true;
-      } else {
-        return false;
-      }
-    },
     isTableShow() {
       if (this.result1.length !== 0 || this.result2.length !== 0) {
         return true;
@@ -372,6 +378,10 @@ export default {
     if (uname == "") {
       this.$router.push("/login");
     }
+    this.createFolder();
+  },
+  destroyed() {
+    this.deleteFolder();
   },
   components: {
     Navbar,
